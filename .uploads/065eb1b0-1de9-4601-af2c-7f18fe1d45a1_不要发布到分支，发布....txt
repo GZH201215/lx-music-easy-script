@@ -1,0 +1,496 @@
+不要发布到分支，发布到主分支，这样好修改，
+
+# LX Music 便捷脚本 · 完整清单
+
+---
+
+# 第一部分 · 项目定义
+
+## 一句话定位
+
+> 一个漂浮在任意网页上的 LX Music 遥控器。
+
+## 它是什么
+
+一个油猴脚本。装进浏览器后，任何网页右上角都会出现一个洛雪音乐标志的小圆球。点一下，弹出一个小面板，让你不切出当前页面就能看到、控制你桌面上的 LX Music。
+
+## 它解决什么问题
+
+你正在浏览网页、看文章、查资料，突然想切歌、看歌词、暂停一下。以前要切回桌面、找到 LX Music、点一下、再切回来。现在只需要动一下网页右上角那个球。
+
+## 它的四个核心能力
+
+**看** —— 当前在放什么、放到哪了、歌词是什么。
+
+**控** —— 播放暂停、上下首、拖进度、调音量、收藏、播放模式。
+
+**搜** —— 在网页里搜歌，列出结果，用户自己选。
+
+**进** —— 打开收藏夹、喜欢的歌手、歌单、播放列表。
+
+## 它不该是什么
+
+不是播放器，不自己出声。不是音源，不碰音乐资源。不是官方，不冒充、不混淆。不是大而全，够用就好。
+
+
+---
+
+# 第二部分 · 基础信息
+
+## 脚本元信息
+
+| 字段 | 值 |
+|---|---|
+| `@name` | LX Music 便捷脚本 |
+| `@namespace` | `` |
+| `@version` | `0.2.1` |
+| `@author` | GZH201215 |
+| `@description` | LX Music 便捷脚本：任意网页悬浮球，查看播放状态、控制播放、搜索歌曲。 |
+| `@homepage` | `` |
+| `@supportURL` | `` |
+
+| `@icon` | `        data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0NDcuOTQyIiBoZWlnaHQ9IjQ0Ny45NDMiPjxwYXRoIGZpbGw9IiM1ZWQ2OTgiIGQ9Ik0yMDMuODA2LjQ4MmMtMTkuNjY4LTMuMzQ2LTM1Ljc2IDExLjEzOS0zNS43NiAzMS4wODZ2MjA2LjE2NmMtMTEuNjQyLTQuMjcxLTI0LjE2NS02LjcyNS0zNy4yODEtNi43MjUtNTkuOTA1IDAtMTA4LjQ2OSA0OC41NjYtMTA4LjQ2OSAxMDguNDczIDAgNTkuOTAzIDQ4LjU2NCAxMDguNDYxIDEwOC40NjkgMTA4LjQ2MSAzNC4xNDEgMCA2NC41NC0xNS44MiA4NC40MDYtNDAuNDgybC00OS42NTgtNDkuNjY0Yy0xNS4xMTYtMTUuMTEyLTExLjcwOC0yOC45MDEtOS41NDItMzQuMTQgMi4xNjYtNS4yMzMgOS41MTQtMTcuNCAzMC44ODMtMTcuNGgxOC4wODJ2LTU2Ljg4NWMwLTIxLjEzMiAxNC42MTctMzguODYyIDM0LjI2Ni00My43NDUuMDMyLTQ0LjM3My4wMzItODEuODA4LjAzMi04MS44MDggMTQwLjE0NyAwIDEzMS43MjQgODMuOTc0IDExNS4zMjUgMTMyLjE5Ni02LjQyIDE4Ljg4NC0yLjYwMSAyMi4wNSAxMC44OTMgNy4zNTRDNTM2LjQ3MyA3Ny4xMDYgMjk4LjM4IDE2LjU2NiAyMDMuODA2LjQ4MnoiLz48cGF0aCBmaWxsPSIjNGRhZjdjIiBkPSJNMzAxLjA2MSAyMjMuODc2aC01MC45OTRjLTMuOTExIDAtNy41NzQuOTUtMTAuODg5IDIuNTIzLTguNjE2IDQuMDktMTQuNjE1IDEyLjc5OC0xNC42MTUgMjIuOTczdjc2LjUxaC0zNy43MDhjLTE0LjA4MiAwLTE3LjQyOCA4LjA3MS03LjQ2NiAxOC4wMjlsNDYuODkzIDQ2Ljg5OCAzMS4yNSAzMS4yNDZhMjUuNDI0IDI1LjQyNCAwIDAwMTguMDMzIDcuNDc0YzYuNTIzIDAgMTMuMDUyLTIuNDg0IDE4LjAyOS03LjQ3NGw3OC4xNTItNzguMTQ1YzkuOTUxLTkuOTU4IDYuNjA4LTE4LjAyOS03LjQ3LTE4LjAyOWgtMzcuNzF2LTc2LjUxYy4wMDEtMTQuMDc4LTExLjQyLTI1LjQ5NS0yNS41MDUtMjUuNDk1eiIvPjwvc3ZnPg==
+/` |
+| `@license` | MIT |
+| `@match` | `*://*/*` |
+| `@run-at` | `document-start` |
+| `@noframes` | 是 |
+| `@grant` | `GM_xmlhttpRequest`、`GM_setValue`、`GM_getValue` |
+| `@connect` | `127.0.0.1`、`localhost` |
+
+## GitHub 仓库信息
+
+| 字段 | 值 |
+|---|---|
+| Repository name | `lx-music-easy-script` |
+| Description | 油猴脚本：在任意网页为 LX Music 桌面版提供可拖动悬浮球，查看播放状态、控制播放、搜索歌曲。 |
+| Topics | `tampermonkey` `userscript` `lx-music` `music` `floating-ball` `playback-control` |
+| License | MIT |
+
+## 协议与合规
+
+脚本用 MIT。LX Music 本体是 Apache 2.0。调用 API 和 Scheme 合规，不冒充官方，不移除版权。优先 SSE，轮询不低于 1 秒。
+
+## 内部命名
+
+统一前缀 `lxmes`。全局对象 `window.__LX_MUSIC_EASY_SCRIPT__`。
+
+| 用途 | 命名 |
+|---|---|
+| 悬浮球 | `lxmes-ball` |
+| 主面板 | `lxmes-panel` |
+| 设置 | `lxmes-settings` |
+| 搜索 | `lxmes-search` |
+| 歌词浮层 | `lxmes-lyric-float` |
+| CSS 类 | `.lxmes-btn`、`.lxmes-progress` |
+| 存储键 | `lxmes:ball-pos`、`lxmes:api-base` |
+
+
+---
+
+# 第三部分 · UI 实况（基于截图）
+
+## 悬浮球
+
+圆形，洛雪绿，白色音符图标，外圈白环。当前用音符而非官方标志，视觉更通用，但和“LX Music 标志”定位有出入。状态指示存在但截图中未明确显示。
+
+## 主面板
+
+**头部区**：封面缩略图、歌名、歌手 + 专辑、右上角状态点。
+
+**歌词区**：单行歌词，有翻译。当前不支持展开。
+
+**进度区**：当前时间、可拖动进度条、总时长。
+
+**控制区**：上一首、大号绿色播放/暂停圆钮、下一首、收藏心形。
+
+**音量区**：喇叭图标、可拖动音量条、数值显示（18 即 18%）。静音点击喇叭切换，可用。
+
+**搜索区**：当前是输入框 + 放大镜。占位符写了“歌名 或 歌名 - 歌手”，降低了学习成本。但搜完自动播放，不列结果。
+
+**状态区**：显示“已连接 127.0.0.1:23330”、重试按钮、齿轮设置按钮。
+
+**设置区**：内嵌在主面板底部，只有端口输入框和“保存并重连”按钮。
+
+
+---
+
+# 第四部分 · 功能需求清单
+
+## 4.1 悬浮球
+
+| 编号 | 需求 | 概念 | 优先级 |
+|---|---|---|---|
+| B-01 | 任意页面显示 | 所有网页右上角出现 | P0 |
+| B-02 | 官方标志 | 当前是音符，是否换回洛雪 SVG 待定 | P1 |
+| B-03 | 可拖动 | 鼠标按住拖动，限制视口内 | P0 |
+| B-04 | 位置记忆 | 松手保存，刷新恢复 | P0 |
+| B-05 | 边缘吸附 | 靠近边缘自动贴边 | P1 |
+| B-06 | 点击展开 | 单击展开/收起面板 | P0 |
+| B-07 | 右键菜单 | 播放/暂停、上下一首、重连 | P1 |
+| B-08 | 连接状态指示 | 灰=未连接、黄=暂停、绿=播放中 | P0 |
+| B-09 | 大小可调 | 40–64px | P2 |
+| B-10 | 透明度可调 | 0.4–1.0，悬停恢复 | P2 |
+| B-11 | 快捷键显隐 | `Alt+L` | P2 |
+| B-12 | 不干扰页面 | 高 z-index，不遮挡点击 | P0 |
+
+## 4.2 主面板
+
+| 编号 | 需求 | 概念 | 优先级 |
+|---|---|---|---|
+| P-01 | 歌曲封面 | 加载失败用默认图 | P1 |
+| P-02 | 歌曲名 | 从 `/status` 取 | P0 |
+| P-03 | 歌手 | 数组转字符串 | P0 |
+| P-04 | 专辑名 | 已有 | P2 |
+| P-05 | 当前歌词 | 已有，含翻译 | P1 |
+| P-06 | 歌词展开 | 点击单行展开全文 | P0 |
+| P-07 | 完整歌词页 | 面板内切换，不跳转 | P0 |
+| P-08 | 进度条显示 | 已有 | P0 |
+| P-09 | 进度条拖动 | 新交互，见第六部分 | P0 |
+| P-10 | 播放/暂停 | 已有 | P0 |
+| P-11 | 上一首/下一首 | 已有 | P0 |
+| P-12 | 音量滑块 | 已有 | P1 |
+| P-13 | 静音开关 | 已有，点喇叭切换 | P1 |
+| P-14 | 收藏按钮 | 已有 | P2 |
+| P-15 | 播放模式 | 缺失，见 4.5 | P1 |
+| P-16 | 播放列表 | 缺失 | P1 |
+| P-17 | 搜索 | 改为放大镜，见第六部分 | P0 |
+| P-18 | 关闭按钮 | 收起面板 | P0 |
+| P-19 | 设置按钮 | 打开设置 | P1 |
+| P-20 | 点击外部收起 | 点页面其他区域关闭 | P1 |
+
+## 4.3 设置
+
+| 编号 | 需求 | 概念 | 优先级 |
+|---|---|---|---|
+| S-01 | 设置真正有用 | 当前只有端口，需扩充 | P0 |
+| S-02 | 主题色 | 预设配色或自定义主色 | P1 |
+| S-03 | 深色/浅色/自动 | 跟随系统或手动 | P1 |
+| S-04 | 悬浮球大小 | 滑块 | P2 |
+| S-05 | 悬浮球透明度 | 滑块 | P2 |
+| S-06 | 位置重置 | 一键回右上角 | P1 |
+| S-07 | 显示项开关 | 封面、歌词、列表 | P2 |
+| S-08 | 轮询间隔 | 500ms–5s | P1 |
+| S-09 | SSE 开关 | 优先 SSE，失败降级 | P1 |
+| S-10 | 快捷键 | 显隐、播放暂停 | P2 |
+| S-11 | 恢复默认 | 一键重置 | P2 |
+
+## 4.4 搜索
+
+| 编号 | 需求 | 概念 | 优先级 |
+|---|---|---|---|
+| Q-01 | 放大镜入口 | 默认只显示图标，点击展开 | P0 |
+| Q-02 | 展开自动聚焦 | 省一次点击 | P0 |
+| Q-03 | Esc 或点外部收起 | 恢复图标态 | P0 |
+| Q-04 | 列出候选结果 | 用户点哪首才播哪首 | P0 |
+| Q-05 | 点击后收起 | 回到简洁态 | P0 |
+| Q-06 | 搜索历史 | 最近 10 条 | P2 |
+| Q-07 | 热门推荐 | 打开时显示 | P3 |
+| Q-08 | 结果可滚动 | 过长可滚 | P1 |
+
+## 4.5 播放模式
+
+| 编号 | 需求 | 概念 | 优先级 |
+|---|---|---|---|
+| PM-01 | 列表循环 | 播完从头 | P1 |
+| PM-02 | 随机播放 | 打乱顺序 | P1 |
+| PM-03 | 单曲循环 | 反复播当前 | P1 |
+| PM-04 | 顺序播放 | 播完停止 | P1 |
+| PM-05 | 切换按钮 | 面板一个图标循环切 | P1 |
+| PM-06 | 状态图标 | 不同模式不同图标 | P1 |
+
+## 4.6 内容入口
+
+| 编号 | 需求 | 概念 | 优先级 |
+|---|---|---|---|
+| C-01 | 打开收藏夹 | Scheme 唤起 | P0 |
+| C-02 | 打开喜欢的歌手 | Scheme 唤起 | P1 |
+| C-03 | 打开歌单 | 输入 ID 或链接 | P1 |
+| C-04 | 播放列表面板 | 显示队列，点击切歌 | P1 |
+
+## 4.7 播放增强
+
+| 编号 | 需求 | 概念 | 优先级 |
+|---|---|---|---|
+| PE-01 | 倍速播放 | 0.5x–2x | P1 |
+| PE-02 | 定时停止 | X 分钟后暂停 | P3 |
+
+
+---
+
+# 第五部分 · API 调用清单
+
+## 5.1 HTTP 开放 API
+
+**基础信息**：默认 `http://127.0.0.1:23330`。启用方式：设置 → 开放 API。最低 v2.7.0，跨域需 v2.8.0+。大部分 GET。
+
+### 状态与歌词
+
+| 功能 | 方法 | 端点 | 参数 | 调用命令 |
+|---|---|---|---|---|
+| 获取播放状态 | GET | `/status` | `filter`（可选） | `http://127.0.0.1:23330/status` |
+| 带过滤获取 | GET | `/status` | `filter=name,progress,status` | `http://127.0.0.1:23330/status?filter=name,progress,status` |
+| 当前 LRC 歌词 | GET | `/lyric` | 无 | `http://127.0.0.1:23330/lyric` |
+| 全部类型歌词 | GET | `/lyric-all` | 无 | `http://127.0.0.1:23330/lyric-all` |
+| 订阅状态 | GET | `/subscribe-player-status` | 无（SSE） | `http://127.0.0.1:23330/subscribe-player-status` |
+
+**概念**：`/status` 是脚本的心跳，回答“在放什么、放到哪、什么状态”。`filter` 让你只要关心的字段。`/lyric` 给当前行，`/lyric-all` 给所有类型（原文、翻译、罗马音）。SSE 是官方推荐的实时通道，状态一变主动推，不用反复问。代价是复杂，油猴环境能否稳定用需实测。撑不住就退回轮询。
+
+### 播放控制
+
+| 功能 | 方法 | 端点 | 参数 | 调用命令 |
+|---|---|---|---|---|
+| 播放 | GET | `/play` | 无 | `http://127.0.0.1:23330/play` |
+| 暂停 | GET | `/pause` | 无 | `http://127.0.0.1:23330/pause` |
+| 下一首 | GET | `/skip-next` | 无 | `http://127.0.0.1:23330/skip-next` |
+| 上一首 | GET | `/skip-prev` | 无 | `http://127.0.0.1:23330/skip-prev` |
+| 跳转进度 | GET | `/seek` | `offset`（秒） | `http://127.0.0.1:23330/seek?offset=30` |
+| 设置音量 | GET | `/volume` | `volume`（0-100） | `http://127.0.0.1:23330/volume?volume=50` |
+| 设置静音 | GET | `/mute` | `mute`（true/false） | `http://127.0.0.1:23330/mute?mute=true` |
+| 收藏 | GET | `/collect` | 无 | `http://127.0.0.1:23330/collect` |
+| 取消收藏 | GET | `/uncollect` | 无 | `http://127.0.0.1:23330/uncollect` |
+
+**概念**：`/play` 和 `/pause` 是独立端点，不是切换。脚本要自己知道当前状态（从 `/status` 来）再决定发哪个。`/seek` 的 `offset` 是目标秒数，不是增量。拖动时不要每动一下都发，松手发一次。`/volume` 和 `/mute` 是一对，静音是独立开关，不影响音量值。`/collect` 和 `/uncollect` 名字相似，别发混。
+
+## 5.2 Scheme URL
+
+**格式**：`lxmusic://<type>/<action>/[path]/...?[param=value]&data={urlencoded_json}`
+
+**概念**：HTTP API 只管控制和状态，不管内容发现。搜索、打开歌单、打开收藏夹这些动作发生在 LX Music 内部，HTTP 没有对应端点。Scheme URL 是浏览器和客户端之间的桥。风险：依赖客户端注册协议，没装或注册坏了点击没反应，脚本要给出反馈。
+
+### data 传参（复杂场景）
+
+| 功能 | URL 结构 | data 必要字段 |
+|---|---|---|
+| 播放歌单 | `lxmusic://songlist/play?data=...` | `source`、`id` 或 `url` |
+| 播放歌曲 | `lxmusic://music/play?data=...` | `name`、`singer`、`source`、`songmid` |
+| 搜索并播放 | `lxmusic://music/searchPlay?data=...` | `name` |
+
+示例：`lxmusic://songlist/play?data=%7B%22source%22:%22kw%22,%22id%22:%223373919903%22%7D`
+
+### 路径传参（简单场景）
+
+| 功能 | URL |
+|---|---|
+| 搜索并播放 | `lxmusic://music/searchPlay/{歌名-歌手}` |
+| 播放 | `lxmusic://player/play` |
+| 暂停 | `lxmusic://player/pause` |
+| 下一曲 | `lxmusic://player/skipNext` |
+| 上一曲 | `lxmusic://player/skipPrev` |
+| 切换播放/暂停 | `lxmusic://player/togglePlay` |
+| 收藏 | `lxmusic://player/collect` |
+| 取消收藏 | `lxmusic://player/uncollect` |
+| 不喜欢 | `lxmusic://player/dislike` |
+
+## 5.3 待实测
+
+| 端点 | 待确认 |
+|---|---|
+| `/play-mode` | 是否存在，`mode` 取值 |
+| `/play-list` | 是否存在 |
+| `/play-index` | 是否存在，参数格式 |
+| `/like`、`/unlike`、`/dislike` | HTTP 是否有 |
+| `/playback-rate` | 倍速播放的前提 |
+| Scheme 打开收藏夹 | 关键字 |
+| Scheme 打开歌手页 | 关键字 |
+| Scheme 只列结果不播放 | 搜索重构的前提 |
+| SSE 在 `GM_xmlhttpRequest` | 能否流式读取 |
+| 错误返回格式 | 怎么识别成功和失败 |
+
+
+---
+
+# 第六部分 · 交互细节
+
+## 6.1 进度条新交互
+
+| 编号 | 规则 | 概念 |
+|---|---|---|
+| PB-01 | 拖动时进度条不动 | 滑块不跟手，或只显示预览标记 |
+| PB-02 | 拖动时歌词同步 | 拖到哪显示哪句歌词 |
+| PB-03 | 松手才跳转 | 松手才发 `/seek` |
+| PB-04 | 松手前不干扰播放 | 拖动中原播放继续，不暂停 |
+
+**概念**：这套规则解决一个矛盾——拖动时的实时反馈 vs 播放器的稳定性。牺牲进度条的视觉跟随，换取歌词预览和播放不中断。需要补充：时间气泡（显示拖到哪）、歌词高亮预览、松手空白处取消拖动。
+
+## 6.2 搜索收起式
+
+| 编号 | 规则 |
+|---|---|
+| Q-01 | 默认只显示放大镜 |
+| Q-02 | 点击展开搜索框 |
+| Q-03 | 展开自动聚焦 |
+| Q-04 | Esc 或点外部收起 |
+| Q-05 | 结果列出候选，用户选 |
+| Q-06 | 点击后自动收起 |
+
+**概念**：解决功能入口可见性 vs 面板简洁度的矛盾。默认隐藏，点击展开。若空间紧张，搜索框从放大镜位置向下滑出，不顶开面板。
+
+## 6.3 面板轻量原则
+
+一切默认轻，需要时才重。面板默认收起，搜索默认藏成放大镜，歌词默认穿透。
+
+
+---
+
+# 第七部分 · 稳定性
+
+## 连接抖动抑制
+
+**问题**：LX Music 有时抽搐，悬浮球状态一绿一灰来回闪。
+
+**原因推测**：`/status` 偶发超时、SSE 短暂断开、播放器忙时响应慢被误判。
+
+| 编号 | 规则 | 概念 |
+|---|---|---|
+| CS-01 | 断开判定加延迟 | 首次失败不算断开，等 7.5 秒 |
+| CS-02 | 延迟内继续重试 | 每 1–2 秒重试 |
+| CS-03 | 任意一次成功即恢复 | 不累计失败 |
+| CS-04 | 状态点平滑过渡 | 加淡出动画 |
+| CS-05 | 抖动抑制 | 7.5 秒内状态不变 |
+| CS-06 | 真断开才提示 | 超过 7.5 秒才显示未连接 |
+| CS-07 | 中间态显示 | 7.5 秒内显示“连接中” |
+
+**概念**：7.5 秒比常见 5 秒更宽松，覆盖切歌、加载、短暂卡顿。代价是真断开时用户要等 7.5 秒才看到提示。这是取舍。
+
+
+---
+
+# 第八部分 · 桌面歌词
+
+## 方案 A：页面内浮动歌词
+
+油猴脚本无法创建真正独立窗口。采用页面内可拖动歌词浮层，从面板拖出，可收回。
+
+| 编号 | 需求 | 概念 | 优先级 |
+|---|---|---|---|
+| DL-01 | 从面板拖出 | 歌词区可拖拽，拖出变独立浮层 | P0 |
+| DL-02 | 独立可拖动 | 浮层可拖，位置独立记忆 | P0 |
+| DL-03 | 可收回面板 | 拖回或按钮收回 | P0 |
+| DL-04 | 显示翻译 | 原文 + 翻译 | P1 |
+| DL-05 | 自动滚动 | 跟随播放高亮 | P1 |
+| DL-06 | 透明度可调 | 0.4–1.0 | P2 |
+| DL-07 | 字号可调 | 小/中/大 | P2 |
+| DL-08 | 锁定位置 | 防误拖 | P2 |
+| DL-09 | 随页面切换保持 | 换页面位置状态不变 | P0 |
+| DL-10 | 可关闭 | 回到面板内 | P0 |
+| DL-11 | 默认穿透 | 歌词文字 `pointer-events: none` | P0 |
+| DL-12 | 把手可拖 | 悬停显示拖动把手 | P0 |
+| DL-13 | 按钮可点 | 关闭、锁定、收回 | P0 |
+| DL-14 | 交互模式 | 按 `Alt` 或长按临时全交互 | P1 |
+| DL-15 | 不拦截页面 | 任何情况不挡页面点击 | P0 |
+
+## 点击穿透
+
+**核心矛盾**：浮层要显示在最上面，又要点击穿透到下面。
+
+**方案**：分区控制，不是一刀切。
+
+| 区域 | 视觉 | 交互 |
+|---|---|---|
+| 歌词文字区 | 最上层 | `pointer-events: none` |
+| 拖动把手 | 显示 | `pointer-events: auto` |
+| 操作按钮 | 显示 | `pointer-events: auto` |
+| 浮层背景 | 半透明或透明 | `pointer-events: none` |
+
+**两种模式**：穿透模式（默认，全穿透）和交互模式（按 `Alt` 临时全交互，可选中复制）。
+
+**拖动把手**：平时隐藏，悬停时左侧出现小圆点。
+
+**概念**：歌词是给眼睛看的，不是给鼠标点的。只有需要操作浮层本身时，才临时变成可交互。和面板、搜索一样，一切默认轻。
+
+## 需要想清楚
+
+穿透模式下歌词不能选中，要选中进交互模式。浮层和悬浮球重叠时悬浮球优先。拖到边缘限制视口内。全屏视频时可能被盖住，浏览器限制无法突破。
+
+
+---
+
+# 第九部分 · 跨页面位置一致性
+
+## 需求
+
+切换页面时，悬浮球、面板、歌词浮层位置不变。
+
+## 技术现实
+
+油猴脚本每页重新注入，所谓“保持”实际是每次重建时从存储读位置重新放。
+
+## 存储清单
+
+| 编号 | 项目 | 存储键 |
+|---|---|---|
+| PS-01 | 悬浮球位置 | `lxmes:ball-pos` |
+| PS-02 | 面板展开状态 | `lxmes:panel-open` |
+| PS-03 | 面板位置 | `lxmes:panel-pos` |
+| PS-04 | 歌词浮层位置 | `lxmes:lyric-pos` |
+| PS-05 | 歌词浮层开关 | `lxmes:lyric-detached` |
+| PS-06 | 歌词浮层透明度 | `lxmes:lyric-opacity` |
+| PS-07 | 歌词浮层字号 | `lxmes:lyric-font-size` |
+| PS-08 | 歌词浮层锁定 | `lxmes:lyric-locked` |
+
+## 恢复逻辑
+
+| 编号 | 规则 |
+|---|---|
+| PS-09 | 页面加载时读存储 |
+| PS-10 | 位置越界回退默认 |
+| PS-11 | 多屏适配需重新校准 |
+| PS-12 | 首次用默认值 |
+| PS-13 | 拖动松手时写，不每次移动都写 |
+
+**概念**：内存换页面就没了，跨页面必须 `GM_setValue` 持久化。内存只是缓存，存储才是真相。
+
+
+---
+
+# 第十部分 · 优先级汇总
+
+## P0 必做
+
+歌词展开、完整歌词页、设置真正有用、搜索列出结果、打开收藏夹、进度条新交互、播放模式、连接抖动抑制、桌面歌词（穿透）、跨页面位置一致。
+
+## P1 重要
+
+歌词翻译、颜色调节、主题切换、打开喜欢的歌手、打开歌单、播放列表、倍速播放、歌词自动滚动、搜索历史、SSE 降级、交互模式。
+
+## P2 锦上添花
+
+大小透明度、显示项开关、搜索历史、播放模式细节、位置重置、字号、锁定、右键菜单、边缘吸附、快捷键。
+
+## P3 可选
+
+热门推荐、定时停止。
+
+
+---
+
+# 第十一部分 · 待实测
+
+| 项目 | 待确认 |
+|---|---|
+| `/play-mode` | 存在？`mode` 取值？ |
+| `/play-list` | 存在？字段结构？ |
+| `/play-index` | 存在？参数格式？ |
+| `/like`、`/unlike`、`/dislike` | HTTP 有？ |
+| `/playback-rate` | 倍速前提 |
+| Scheme 打开收藏夹 | 关键字 |
+| Scheme 打开歌手页 | 关键字 |
+| Scheme 只列结果不播放 | 搜索重构前提 |
+| SSE 在 `GM_xmlhttpRequest` | 能否流式 |
+| 错误返回格式 | 怎么识别成败 |
+| `/status` 是否返回 `playbackRate` | 倍速前提 |
+| `/lyric-all` 返回结构 | 翻译罗马音怎么区分 |
+
+
+---
+
+# 第十二部分 · 判断标准
+
+装上去之后，你会不会真的用它。
+
+如果它变成你浏览器里一个安静但顺手的东西，就成了。
+
+三个方向：**连接不抖** → 它看起来是稳的。**歌词能拖出来** → 它能脱离面板独立存在。**位置跨页面保持** → 它一直在那，不随页面刷新消失。
+
+一切默认轻，需要时才重。
