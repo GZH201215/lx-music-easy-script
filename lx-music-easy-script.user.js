@@ -88,7 +88,15 @@
   const PROBE_MS = 1500
 
   // 乐观更新的保持时间（毫秒）：本地操作后，短暂忽略服务端回包，避免控件“跳回去”
-  const HOLD = { status: 1200, progress: 1000, volume: 900, mute: 900, collect: 900 }
+  // U4：控制指令改走 fetch 后回包只要毫秒级，保持窗口从 1200 收到 800
+  const HOLD = { status: 800, progress: 1000, volume: 900, mute: 900, collect: 900 }
+
+  // 超时（C3 / R3）：快速失败、快速恢复
+  const T_STATUS = 1500 // GET /status
+  const T_CMD = 1500    // 播放控制指令
+
+  // U2 冷却锁：350ms 内同一种会互抢状态的操作只发一次，防连点打架
+  const COOLDOWN_MS = 350
 
   const BALL_SIZE = 48
   const SEARCH_LIMIT = 12
@@ -196,7 +204,16 @@
   }
 
   /* ============================================================
-   * 网络（全部走 GM_xmlhttpRequest，绕开页面 CORS / CSP / 混合内容）
+   * 网络
+   *
+   * 通道选择（T1 / A2 / A3）：
+   *   - 状态与控制指令优先走原生 fetch：http://127.0.0.1 属可信来源，HTTPS 页面
+   *     也不受混合内容限制；LX 开放 API 自带 Access-Control-Allow-Origin: *，
+   *     且 fetch 自动复用 TCP 连接（C1），延迟是毫秒级，而不是 GM 的进程间往返
+   *   - fetch 被页面 CSP 拦下 / 环境不支持时自动回退 GM_xmlhttpRequest，
+   *     回退后 30 秒内不再试 fetch，免得每条请求都先白等一次
+   *   - 搜索用的公开元数据接口没有 CORS 头，继续直接走 GM（httpText）
+   *   - 读请求 100ms 内的同 URL 合并（R2）；控制指令不去重，连点两下就该发两次
    * ============================================================ */
   function gmRequest(url, timeout) {
     return new Promise((resolve, reject) => {
@@ -243,7 +260,60 @@
     throw err
   }
 
-  const apiGet = (path, timeout) => httpText(state.base + path, timeout)
+  const NET = { fetchCooldown: 0, reads: new Map() }
+
+  function fetchOnce(url, timeout) {
+    return new Promise((resolve, reject) => {
+      const ctrl = typeof AbortController === 'function' ? new AbortController() : null
+      const timer = setTimeout(() => {
+        if (ctrl) { try { ctrl.abort() } catch (e) { /* 忽略 */ } }
+        reject(new Error('timeout'))
+      }, timeout)
+      const opt = { cache: 'no-store', credentials: 'omit' }
+      if (ctrl) opt.signal = ctrl.signal
+      fetch(url, opt).then(
+        r => r.text().then(text => {
+          clearTimeout(timer)
+          resolve({ status: r.status, text })
+        }),
+        err => {
+          clearTimeout(timer)
+          reject(err)
+        }
+      )
+    })
+  }
+
+  async function httpTextFast(url, timeout, dedupe) {
+    const t = timeout || T_STATUS
+    // R2：100ms 内重复的同一个读请求直接复用，不再发第二次
+    if (dedupe) {
+      const hit = NET.reads.get(url)
+      const now = performance.now()
+      if (hit && now - hit.at < 100) return hit.p
+      const p = httpTextFast(url, t, false)
+      NET.reads.set(url, { at: now, p })
+      return p
+    }
+    if (Date.now() > NET.fetchCooldown && typeof fetch === 'function') {
+      try {
+        const res = await fetchOnce(url, t)
+        if (res.status === 200) return res.text
+        const err = new Error((res.text || '').trim() || ('HTTP ' + res.status))
+        err.httpStatus = res.status // 服务端真实回包：说明 fetch 通道本身可用
+        throw err
+      } catch (e) {
+        if (e && e.httpStatus) throw e
+        NET.fetchCooldown = Date.now() + 30000
+      }
+    }
+    return httpText(url, t)
+  }
+
+  // 状态 / 歌词等读请求：fetch 优先 + 同 URL 合并
+  const apiRead = (path, timeout) => httpTextFast(state.base + path, timeout == null ? T_STATUS : timeout, true)
+  // 控制指令：fetch 优先，不去重
+  const apiCmd = (path, timeout) => httpTextFast(state.base + path, timeout == null ? T_CMD : timeout, false)
 
   /* ============================================================
    * 运行状态
@@ -308,6 +378,16 @@
     setTimeout(() => { if (!ballHidden) schedulePoll(0) }, ms + 250)
   }
   const isHeld = key => (holds[key] || 0) > Date.now()
+
+  // U2：冷却锁 —— 只给“会互相抢状态”的操作上锁（播放/暂停、收藏、静音）。
+  // 上一首/下一首不加锁：连点快速切歌是正常用法。
+  const lastAct = {}
+  function cooling(id) {
+    const now = Date.now()
+    if ((lastAct[id] || 0) + COOLDOWN_MS > now) return true
+    lastAct[id] = now
+    return false
+  }
 
   // 进度条拖动中的临时值
   let progDrag = null
@@ -426,15 +506,25 @@
     }
   }
 
-  async function fetchStatus() {
-    try {
-      const text = await apiGet('/status?filter=' + FILTER, 3500)
-      const data = JSON.parse(text)
-      netOk()
-      applyStatus(data)
-    } catch (e) {
-      netFail()
-    }
+  // R1 单飞：轮询、断线重试、指令后刷新经常同时到点，同一时刻只保留一个 /status 在飞
+  let statusFlight = null
+
+  function fetchStatus() {
+    if (statusFlight) return statusFlight
+    const p = (async () => {
+      try {
+        const text = await apiRead('/status?filter=' + FILTER, T_STATUS)
+        const data = JSON.parse(text)
+        netOk()
+        applyStatus(data)
+      } catch (e) {
+        netFail()
+      } finally {
+        if (statusFlight === p) statusFlight = null
+      }
+    })()
+    statusFlight = p
+    return p
   }
 
   /* 轮询循环 */
@@ -465,9 +555,17 @@
     schedulePoll(delay == null ? 350 : delay)
   }
 
-  async function cmd(path, label) {
+  // U3：pending 反馈 —— 指令在飞的时候按钮转圈；最短显示 180ms，否则快请求闪一下看不见
+  function markPending(el, on) {
+    if (el && el.classList) el.classList.toggle('pending', !!on)
+  }
+
+  async function cmd(path, label, btn) {
+    const t0 = performance.now()
+    markPending(btn, true)
     try {
-      await apiGet(path, 3000)
+      await apiCmd(path, T_CMD)
+      if (state.link !== 'ok') netOk() // B5：任意一次成功立即恢复，不必等下一次轮询
       refreshSoon()
       return true
     } catch (e) {
@@ -478,6 +576,10 @@
         showToast('无法连接 LX Music', 'err', '请确认桌面端已启动、开放 API 已启用（默认端口 23330）')
       }
       return false
+    } finally {
+      const rest = 180 - (performance.now() - t0)
+      if (rest > 0) setTimeout(() => markPending(btn, false), rest)
+      else markPending(btn, false)
     }
   }
 
@@ -577,7 +679,7 @@
     renderLyricView()
     renderFloat()
     try {
-      const text = await apiGet('/lyric-all', 6000)
+      const text = await apiRead('/lyric-all', 6000)
       const data = JSON.parse(text)
       if (lyr.key !== key) return
       const main = parseLrc(data.lyric)
@@ -1714,7 +1816,7 @@
     state.status.progress = secs
     state.syncAt = performance.now()
     renderProgress(secs)
-    apiGet('/seek?offset=' + secs, 3000).then(() => refreshSoon(400)).catch(e => {
+    apiCmd('/seek?offset=' + secs, T_CMD).then(() => refreshSoon(400)).catch(e => {
       if (!e.httpStatus) netFail()
       render()
     })
@@ -1763,7 +1865,7 @@
     }
     hold('volume', HOLD.volume)
     state.status.volume = value
-    apiGet('/volume?volume=' + value, 3000).then(() => refreshSoon(500)).catch(e => {
+    apiCmd('/volume?volume=' + value, T_CMD).then(() => refreshSoon(500)).catch(e => {
       if (!e.httpStatus) netFail()
       renderVolume()
     })
@@ -2128,7 +2230,7 @@
     state.status.progress = secs
     state.syncAt = performance.now()
     renderProgress(secs)
-    apiGet('/seek?offset=' + secs, 3000).then(() => refreshSoon(400)).catch(e => {
+    apiCmd('/seek?offset=' + secs, T_CMD).then(() => refreshSoon(400)).catch(e => {
       if (!e.httpStatus) netFail()
       render()
     })
@@ -2137,14 +2239,14 @@
   /* ============================================================
    * 交互：球 / 面板 / 浮层 / 菜单
    * ============================================================ */
-  function togglePlay() {
+  function togglePlay(btn) {
     if (state.link !== 'ok') return
     const playing = state.status.status === 'playing'
     hold('status', HOLD.status)
     state.status.status = playing ? 'paused' : 'playing'
     renderPlayBtn()
     renderConn() // 悬浮球形态立即跟随（乐观更新）
-    cmd(playing ? '/pause' : '/play', playing ? '暂停' : '播放')
+    cmd(playing ? '/pause' : '/play', playing ? '暂停' : '播放', btn)
   }
 
   function retryConn() {
@@ -2192,34 +2294,35 @@
     const act = target.getAttribute('data-act')
     switch (act) {
       case 'toggle':
-        togglePlay()
+        if (cooling('toggle')) break
+        togglePlay(target)
         break
       case 'prev':
         if (state.link !== 'ok') return
-        cmd('/skip-prev', '上一首')
+        cmd('/skip-prev', '上一首', target)
         break
       case 'next':
         if (state.link !== 'ok') return
-        cmd('/skip-next', '下一首')
+        cmd('/skip-next', '下一首', target)
         break
       case 'collect': {
-        if (state.link !== 'ok' || !state.status.name) return
+        if (state.link !== 'ok' || !state.status.name || cooling('collect')) return
         const collected = !!state.status.collect
         hold('collect', HOLD.collect)
         state.status.collect = !collected
         renderSong()
-        cmd(collected ? '/uncollect' : '/collect', collected ? '取消收藏' : '收藏').then(ok => {
+        cmd(collected ? '/uncollect' : '/collect', collected ? '取消收藏' : '收藏', target).then(ok => {
           if (ok) showToast(collected ? '已取消收藏' : '已收藏')
         })
         break
       }
       case 'mute': {
-        if (state.link !== 'ok') return
+        if (state.link !== 'ok' || cooling('mute')) return
         const next = !state.status.mute
         hold('mute', HOLD.mute)
         state.status.mute = next
         renderVolume()
-        cmd('/mute?mute=' + (next ? 'true' : 'false'), next ? '静音' : '取消静音')
+        cmd('/mute?mute=' + (next ? 'true' : 'false'), next ? '静音' : '取消静音', target)
         break
       }
       case 'retry':
@@ -2355,16 +2458,17 @@
         break
       }
       case 'm-toggle':
+        if (cooling('toggle')) break
         closeMenu()
-        togglePlay()
+        togglePlay(target)
         break
       case 'm-prev':
         closeMenu()
-        if (state.link === 'ok') cmd('/skip-prev', '上一首')
+        if (state.link === 'ok') cmd('/skip-prev', '上一首', target)
         break
       case 'm-next':
         closeMenu()
-        if (state.link === 'ok') cmd('/skip-next', '下一首')
+        if (state.link === 'ok') cmd('/skip-next', '下一首', target)
         break
       case 'm-retry':
         closeMenu()

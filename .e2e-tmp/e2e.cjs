@@ -1,5 +1,5 @@
 // 端到端验证：mock LX API + Playwright（open shadow 补丁）
-const { chromium } = require('playwright')
+const { chromium } = require('playwright-core')
 const fs = require('fs')
 
 const API = 'http://127.0.0.1:23330'
@@ -36,7 +36,7 @@ async function waitFor(fn, timeout = 5000, interval = 120) {
 }
 
 ;(async () => {
-  const browser = await chromium.launch()
+  const browser = await chromium.launch({ executablePath: process.env.CHROME_PATH })
   const page = await browser.newPage({ viewport: { width: 1280, height: 800 } })
   const errors = []
   page.on('pageerror', e => errors.push('pageerror: ' + String(e)))
@@ -93,6 +93,7 @@ async function waitFor(fn, timeout = 5000, interval = 120) {
   check('toggle → /pause', !!paused)
   check('ball paused state', ((await ball.getAttribute('class')) || '').includes('paused'), await ball.getAttribute('class'))
   await reset()
+  await sleep(400) // U2 冷却锁 350ms：两次互相抢状态的操作之间要留间隔
   await page.locator('[data-act="toggle"]').click()
   check('toggle → /play', !!(await waitFor(async () => (await getCalls()).includes('/play'), 3000)))
 
